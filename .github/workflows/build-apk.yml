@@ -23,14 +23,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check project files
-        shell: bash
-        run: |
-          test -f settings.gradle || { echo "settings.gradle missing"; exit 1; }
-          test -f build.gradle || { echo "build.gradle missing"; exit 1; }
-          test -f app/build.gradle || { echo "app/build.gradle missing"; exit 1; }
-          echo "Project structure OK"
-
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
@@ -44,7 +36,6 @@ jobs:
         run: |
           echo "$KEYSTORE_BASE64" | base64 --decode > "$TANK_KEYSTORE_PATH"
           test -s "$TANK_KEYSTORE_PATH" || { echo "Keystore restore failed"; exit 1; }
-          echo "Keystore restored"
 
       - name: Verify signing key
         shell: bash
@@ -53,7 +44,6 @@ jobs:
             -keystore "$TANK_KEYSTORE_PATH" \
             -storepass "$TANK_KEYSTORE_PASSWORD" \
             -alias "$TANK_KEY_ALIAS" >/dev/null
-          echo "Signing key verified"
 
       - name: Find Android SDK Manager
         shell: bash
@@ -88,14 +78,9 @@ jobs:
       - name: Build signed release APK
         run: gradle :app:assembleRelease --stacktrace
 
-      - name: Show generated APK
-        shell: bash
-        run: |
-          find app/build/outputs/apk/release -type f -name "*.apk" -print
-
       - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: TANK-Companion-v1.1-signed
+          name: TANK-Companion-v1.2-signed
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
