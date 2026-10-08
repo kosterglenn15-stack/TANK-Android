@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Signed Android APK
 
 on:
   workflow_dispatch:
@@ -14,15 +14,18 @@ jobs:
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      TANK_KEYSTORE_PATH: ${{ github.workspace }}/tank-release.jks
+      TANK_KEYSTORE_PASSWORD: ${{ secrets.TANK_KEYSTORE_PASSWORD }}
+      TANK_KEY_PASSWORD: ${{ secrets.TANK_KEY_PASSWORD }}
+      TANK_KEY_ALIAS: ${{ secrets.TANK_KEY_ALIAS }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check project
+      - name: Check project files
         shell: bash
         run: |
-          echo "Checking Android project..."
           test -f settings.gradle || { echo "settings.gradle missing"; exit 1; }
           test -f build.gradle || { echo "build.gradle missing"; exit 1; }
           test -f app/build.gradle || { echo "app/build.gradle missing"; exit 1; }
@@ -34,19 +37,33 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Restore signing keystore
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.TANK_KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$TANK_KEYSTORE_PATH"
+          test -s "$TANK_KEYSTORE_PATH" || { echo "Keystore restore failed"; exit 1; }
+          echo "Keystore restored"
+
+      - name: Verify signing key
+        shell: bash
+        run: |
+          keytool -list \
+            -keystore "$TANK_KEYSTORE_PATH" \
+            -storepass "$TANK_KEYSTORE_PASSWORD" \
+            -alias "$TANK_KEY_ALIAS" >/dev/null
+          echo "Signing key verified"
+
       - name: Find Android SDK Manager
         shell: bash
         run: |
           SDKMANAGER=$(find "$ANDROID_SDK_ROOT/cmdline-tools" -type f -name sdkmanager | head -n 1)
 
           if [ -z "$SDKMANAGER" ]; then
-            echo "ERROR: sdkmanager could not be found"
-            find "$ANDROID_SDK_ROOT" -maxdepth 4 -type f -name sdkmanager -print
+            echo "ERROR: sdkmanager not found"
             exit 1
           fi
-
-          echo "Found sdkmanager:"
-          echo "$SDKMANAGER"
 
           echo "SDKMANAGER=$SDKMANAGER" >> "$GITHUB_ENV"
 
@@ -68,21 +85,17 @@ jobs:
         with:
           gradle-version: "8.9"
 
-      - name: Show Gradle projects
-        run: gradle projects
+      - name: Build signed release APK
+        run: gradle :app:assembleRelease --stacktrace
 
-      - name: Build APK
-        run: gradle :app:assembleDebug --stacktrace
-
-      - name: Locate APK
+      - name: Show generated APK
         shell: bash
         run: |
-          echo "Generated APK files:"
-          find . -type f -name "*.apk" -print
+          find app/build/outputs/apk/release -type f -name "*.apk" -print
 
-      - name: Upload APK
+      - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: TANK-Android-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: TANK-Companion-v1.1-signed
+          path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
