@@ -20,7 +20,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:text="The Anomaly Named Kalebration\nPassword generator for the T.A.N.K. v2.2 layer chain."
+            android:text="The Anomaly Named Kalebration"
             android:textSize="15sp" />
 
         <EditText
@@ -43,23 +43,16 @@
             android:id="@+id/calculateButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Calculate T.A.N.K. password" />
-
-        <Button
-            android:id="@+id/copyButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Copy final password" />
+            android:text="Run T.A.N.K. sequence" />
 
         <TextView
             android:id="@+id/outputText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Enter today's Wordle, then calculate."
-            android:textIsSelectable="true"
-            android:textSize="14sp"
-            android:typeface="monospace" />
+            android:text="Enter today's Wordle, then run the sequence."
+            android:textIsSelectable="false"
+            android:textSize="14sp" />
 
     </LinearLayout>
 </ScrollView>
