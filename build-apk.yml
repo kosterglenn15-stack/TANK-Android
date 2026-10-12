@@ -1,35 +1,38 @@
-name: Build Android APK
+name: Build TANK Companion Integrated APK
 
 on:
   workflow_dispatch:
   push:
-    branches: [ "main", "master" ]
+    branches: [main, master]
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
+      - name: Checkout source
         uses: actions/checkout@v4
-
-      - name: Set up Java
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-
-      - name: Set up Gradle
+      - name: Check Android SDK
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          test -d "$ANDROID_HOME"
+      - name: Set up Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-
-      - name: Build debug APK
-        run: gradle assembleDebug
-
+      - name: Build APK
+        run: gradle --no-daemon :app:assembleDebug --stacktrace
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: TANK-Android-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: TANK-Companion-integrated-debug
+          path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
