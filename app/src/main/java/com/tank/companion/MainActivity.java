@@ -1,234 +1,145 @@
 package com.tank.companion;
 
 import android.app.Activity;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.text.InputType;
+import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import android.widget.Toast;
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
 public class MainActivity extends Activity {
-    private static final String RELEASES_API =
-            "https://api.github.com/repos/kosterglenn15-stack/TANK-Android/releases?per_page=20";
+    private EditText wordle, date, entry;
+    private TextView output, stepLabel, status;
+    private LinearLayout calculatorPanel, lockPanel, ownerPanel;
+    private TankCore.Result challenge;
+    private String[] expected;
+    private int index = 0;
+    private String lastPassword = "";
+    private static final String[] LAYER_NAMES = {
+        "Layer 1 - Wordle", "Layer 2 - Daily coordinate", "Layer 3 - Kalebration 3301",
+        "Layer 4 - Cicada transform", "Layer 5 - Date confirmation (new checkpoint)",
+        "Layer 6 - Chain checksum (new checkpoint)", "Layer 7 - Distorted coordinate",
+        "Layer 8 - Waypoint token", "Layer 9 - Final T.A.N.K. password"
+    };
 
-    private EditText wordleInput;
-    private EditText dateInput;
-    private TextView outputText;
-    private TextView updateStatus;
-    private Button updateButton;
-
-    private String updateUrl = null;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    @Override public void onCreate(Bundle b) {
+        super.onCreate(b);
         setContentView(R.layout.activity_main);
-
-        wordleInput = findViewById(R.id.wordleInput);
-        dateInput = findViewById(R.id.dateInput);
-        outputText = findViewById(R.id.outputText);
-        updateStatus = findViewById(R.id.updateStatus);
-        updateButton = findViewById(R.id.updateButton);
-
-        dateInput.setText(new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date()));
-
-        Button calculateButton = findViewById(R.id.calculateButton);
-        calculateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                runTankSequence();
-            }
-        });
-
-        updateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (updateUrl != null) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(updateUrl));
-                    startActivity(intent);
-                }
-            }
-        });
-
-        checkForUpdates();
+        wordle = findViewById(R.id.wordleInput);
+        date = findViewById(R.id.dateInput);
+        entry = findViewById(R.id.layerInput);
+        output = findViewById(R.id.outputText);
+        stepLabel = findViewById(R.id.layerLabel);
+        status = findViewById(R.id.statusText);
+        calculatorPanel = findViewById(R.id.calculatorPanel);
+        lockPanel = findViewById(R.id.lockPanel);
+        ownerPanel = findViewById(R.id.ownerPanel);
+        output.setMovementMethod(new ScrollingMovementMethod());
+        date.setText(today());
+        findViewById(R.id.calculateButton).setOnClickListener(v -> calculate());
+        findViewById(R.id.copyButton).setOnClickListener(v -> copyPassword());
+        findViewById(R.id.userModeButton).setOnClickListener(v -> showUser());
+        findViewById(R.id.ownerModeButton).setOnClickListener(v -> showLock());
+        findViewById(R.id.beginChallengeButton).setOnClickListener(v -> beginChallenge());
+        findViewById(R.id.nextLayerButton).setOnClickListener(v -> verifyLayer());
+        findViewById(R.id.backButton).setOnClickListener(v -> showUser());
+        findViewById(R.id.lockAgainButton).setOnClickListener(v -> showUser());
+        showUser();
     }
 
-    private void runTankSequence() {
-        String wordle = wordleInput.getText().toString().trim();
-        String date = dateInput.getText().toString().trim();
-
+    private String today() {return new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());}
+    private void toast(String msg) {Toast.makeText(this,msg,Toast.LENGTH_LONG).show();}
+    private void showUser() {
+        challenge=null; expected=null; index=0;
+        calculatorPanel.setVisibility(View.VISIBLE);
+        lockPanel.setVisibility(View.GONE);
+        ownerPanel.setVisibility(View.GONE);
+        status.setText("User Mode — original T.A.N.K. calculator");
+    }
+    private void showLock() {
+        challenge=null; expected=null; index=0;
+        calculatorPanel.setVisibility(View.VISIBLE);
+        lockPanel.setVisibility(View.VISIBLE);
+        ownerPanel.setVisibility(View.GONE);
+        stepLabel.setText("Nine-layer daily entry. Layers 5–6 are added checkpoints, not recovered original layers.");
+        status.setText("Owner verification demo — local only");
+    }
+    private void calculate() {
         try {
-            TankCore.calculate(wordle, date);
-
-            outputText.setText(
-                    "T.A.N.K. sequence completed.\n\n" +
-                    "Verification complete."
-            );
-        } catch (Exception ex) {
-            String message = ex.getMessage();
-            if (message == null || message.trim().isEmpty()) {
-                message = "Invalid input.";
-            }
-            outputText.setText("INPUT ERROR\n" + message);
-        }
+            TankCore.Result r=TankCore.calculate(wordle.getText().toString(),date.getText().toString());
+            lastPassword=r.password;
+            output.setText("Layer 1 - Wordle\n"+r.wordle+"\n\n"+
+                "Layer 2 - Daily coordinate\n"+r.coordinate+"\n\n"+
+                "Layer 3 - Kalebration 3301\n"+r.kalebration+"\n\n"+
+                "Layer 4 - Cicada transform\n"+r.cicada+"\n\n"+
+                "Layer 7 - Distorted coordinate\n"+r.distorted+"\n\n"+
+                "Layer 8 - Waypoint token\n"+r.waypoint+"\n\n"+
+                "Layer 9 - TODAY'S T.A.N.K. PASSWORD\n"+r.password);
+        } catch(Exception ex){lastPassword="";output.setText("ERROR\n"+ex.getMessage());}
     }
-
-    private void checkForUpdates() {
-        updateStatus.setText("Checking for updates...");
-        updateButton.setVisibility(View.GONE);
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                HttpURLConnection connection = null;
-
-                try {
-                    URL url = new URL(RELEASES_API);
-                    connection = (HttpURLConnection) url.openConnection();
-                    connection.setConnectTimeout(8000);
-                    connection.setReadTimeout(8000);
-                    connection.setRequestProperty("Accept", "application/vnd.github+json");
-                    connection.setRequestProperty("User-Agent", "TANK-Companion");
-
-                    int status = connection.getResponseCode();
-
-                    if (status != 200) {
-                        setUpdateStatus("Update check unavailable.", null);
-                        return;
-                    }
-
-                    BufferedReader reader = new BufferedReader(
-                            new InputStreamReader(connection.getInputStream())
-                    );
-
-                    StringBuilder body = new StringBuilder();
-                    String line;
-
-                    while ((line = reader.readLine()) != null) {
-                        body.append(line);
-                    }
-
-                    reader.close();
-
-                    JSONArray releases = new JSONArray(body.toString());
-
-                    int currentVersion = parseVersion(BuildConfig.VERSION_NAME);
-                    int bestVersion = currentVersion;
-                    String bestUrl = null;
-                    String bestName = null;
-
-                    for (int i = 0; i < releases.length(); i++) {
-                        JSONObject release = releases.getJSONObject(i);
-
-                        if (release.optBoolean("draft", false) ||
-                                release.optBoolean("prerelease", false)) {
-                            continue;
-                        }
-
-                        String tag = release.optString("tag_name", "");
-                        int candidateVersion = parseVersion(tag);
-
-                        if (candidateVersion <= bestVersion) {
-                            continue;
-                        }
-
-                        String candidateUrl = release.optString("html_url", "");
-
-                        JSONArray assets = release.optJSONArray("assets");
-
-                        if (assets != null) {
-                            for (int a = 0; a < assets.length(); a++) {
-                                JSONObject asset = assets.getJSONObject(a);
-                                String assetName = asset.optString("name", "");
-
-                                if ("app-release.apk".equalsIgnoreCase(assetName) ||
-                                        assetName.toLowerCase(Locale.US).endsWith(".apk")) {
-
-                                    String direct = asset.optString("browser_download_url", "");
-
-                                    if (!direct.isEmpty()) {
-                                        candidateUrl = direct;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
-                        bestVersion = candidateVersion;
-                        bestUrl = candidateUrl;
-                        bestName = tag;
-                    }
-
-                    if (bestUrl != null) {
-                        setUpdateStatus("Update available: " + bestName, bestUrl);
-                    } else {
-                        setUpdateStatus("T.A.N.K. Companion is up to date.", null);
-                    }
-
-                } catch (Exception ex) {
-                    setUpdateStatus("Update check unavailable.", null);
-                } finally {
-                    if (connection != null) {
-                        connection.disconnect();
-                    }
-                }
-            }
-        }).start();
+    private void copyPassword() {
+        if(lastPassword.length()==0){toast("Calculate a password first.");return;}
+        ClipboardManager cm=(ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
+        cm.setPrimaryClip(ClipData.newPlainText("T.A.N.K. password", lastPassword));
+        toast("Password copied.");
     }
-
-    private void setUpdateStatus(final String message, final String url) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                updateStatus.setText(message);
-                updateUrl = url;
-
-                if (url != null && !url.isEmpty()) {
-                    updateButton.setVisibility(View.VISIBLE);
-                } else {
-                    updateButton.setVisibility(View.GONE);
-                }
-            }
-        });
+    private static String sha256(String input) throws Exception {
+        byte[] hash=MessageDigest.getInstance("SHA-256").digest(input.getBytes(StandardCharsets.UTF_8));
+        StringBuilder sb=new StringBuilder();
+        for(byte x:hash)sb.append(String.format(Locale.US,"%02X",x&255));
+        return sb.toString();
     }
-
-    private int parseVersion(String value) {
-        if (value == null) return -1;
-
-        String cleaned = value.trim().toLowerCase(Locale.US);
-
-        if (cleaned.startsWith("v")) {
-            cleaned = cleaned.substring(1);
-        }
-
-        String[] parts = cleaned.split("\\.");
-
-        if (parts.length < 2 || parts.length > 3) {
-            return -1;
-        }
-
+    private void beginChallenge() {
         try {
-            int major = Integer.parseInt(parts[0]);
-            int minor = Integer.parseInt(parts[1]);
-            int patch = parts.length == 3 ? Integer.parseInt(parts[2]) : 0;
-
-            return major * 1000000 + minor * 1000 + patch;
-
-        } catch (NumberFormatException ex) {
-            return -1;
-        }
+            if(!today().equals(date.getText().toString().trim())) {toast("For owner mode, select today's date.");return;}
+            challenge=TankCore.calculate(wordle.getText().toString(),today());
+            // Layers 5 and 6 did not exist as outputs in the supplied original TankCore.
+            // These are explicitly NEW checkpoints; the seven original outputs stay unchanged.
+            expected=new String[]{challenge.wordle, challenge.coordinate, challenge.kalebration,
+               challenge.cicada, challenge.date,
+               sha256("TANK-CHECKPOINT6|"+challenge.date+"|"+challenge.kalebration+"|"+challenge.cicada),
+               challenge.distorted,challenge.waypoint,challenge.password};
+            index=0;
+            renderStep();
+        }catch(Exception ex){toast("Cannot start: "+ex.getMessage());}
     }
+    private void renderStep() {
+        lockPanel.setVisibility(View.VISIBLE);
+        stepLabel.setText((index+1)+" / 9 — "+LAYER_NAMES[index]);
+        entry.setText("");
+        entry.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD|
+            InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        entry.requestFocus();
+        status.setText("Today's challenge: "+challenge.date);
+    }
+    private void verifyLayer() {
+        if(expected==null){toast("Start the challenge first.");return;}
+        if(!today().equals(challenge.date)){toast("Date changed. Restart the challenge.");showLock();return;}
+        String received=entry.getText().toString().trim();
+        if(!expected[index].equalsIgnoreCase(received)) {
+            toast("Incorrect layer. Try again.");entry.setText("");return;
+        }
+        index++;
+        if(index==9) {
+            expected=null;challenge=null;
+            lockPanel.setVisibility(View.GONE);
+            calculatorPanel.setVisibility(View.GONE);
+            ownerPanel.setVisibility(View.VISIBLE);
+            status.setText("Owner demonstration unlocked — not a secure remote authorization");
+        }else renderStep();
+    }
+    @Override protected void onStop(){super.onStop();showUser();}
 }
