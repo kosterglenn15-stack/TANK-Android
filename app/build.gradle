@@ -6,38 +6,11 @@ android {
     namespace 'com.tank.companion'
     compileSdk 35
 
-    buildFeatures {
-        buildConfig true
-    }
-
     defaultConfig {
         applicationId 'com.tank.companion'
         minSdk 26
         targetSdk 35
-        versionCode 3
-        versionName "1.2"
-    }
-
-    signingConfigs {
-        release {
-            def keystorePath = System.getenv("TANK_KEYSTORE_PATH")
-            if (keystorePath != null && !keystorePath.isEmpty()) {
-                storeFile file(keystorePath)
-            }
-            storePassword System.getenv("TANK_KEYSTORE_PASSWORD")
-            keyAlias System.getenv("TANK_KEY_ALIAS")
-            keyPassword System.getenv("TANK_KEY_PASSWORD")
-        }
-    }
-
-    buildTypes {
-        release {
-            signingConfig signingConfigs.release
-            minifyEnabled false
-        }
-
-        debug {
-            minifyEnabled false
-        }
+        versionCode 1
+        versionName '1.0'
     }
 }

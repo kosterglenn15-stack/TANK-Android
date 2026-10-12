@@ -1,73 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="18dp">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="T.A.N.K. Companion"
-            android:textSize="28sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="The Anomaly Named Kalebration"
-            android:textSize="15sp" />
-
-        <TextView
-            android:id="@+id/updateStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Checking for updates..."
-            android:textSize="13sp" />
-
-        <Button
-            android:id="@+id/updateButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Update available"
-            android:visibility="gone" />
-
-        <EditText
-            android:id="@+id/wordleInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="Today's 5-letter Wordle"
-            android:inputType="textCapCharacters"
-            android:maxLength="5" />
-
-        <EditText
-            android:id="@+id/dateInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="yyyy-MM-dd"
-            android:inputType="text" />
-
-        <Button
-            android:id="@+id/calculateButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Run T.A.N.K. sequence" />
-
-        <TextView
-            android:id="@+id/outputText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Enter today's Wordle, then run the sequence."
-            android:textIsSelectable="false"
-            android:textSize="14sp" />
-
+    android:layout_width="match_parent" android:layout_height="match_parent" android:padding="18dp">
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="T.A.N.K. Companion" android:textSize="27sp" android:textStyle="bold" />
+    <TextView android:id="@+id/statusText" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="8dp" android:text="User Mode" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+      <Button android:id="@+id/userModeButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="User" />
+      <Button android:id="@+id/ownerModeButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Owner" />
     </LinearLayout>
+    <LinearLayout android:id="@+id/calculatorPanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Original T.A.N.K. calculation engine" android:paddingTop="10dp" />
+      <EditText android:id="@+id/wordleInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Today's 5-letter Wordle" android:inputType="textCapCharacters" android:maxLength="5" />
+      <EditText android:id="@+id/dateInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="yyyy-MM-dd" android:inputType="date" />
+      <Button android:id="@+id/calculateButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Calculate original T.A.N.K. password" />
+      <Button android:id="@+id/copyButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Copy final password" />
+      <TextView android:id="@+id/outputText" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Enter today's Wordle, then calculate." android:textIsSelectable="true" android:textSize="13sp" android:typeface="monospace" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/lockPanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+      <TextView android:id="@+id/layerLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="18dp" android:text="Layer 1 of 9" android:textSize="18sp" />
+      <Button android:id="@+id/beginChallengeButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Start today's nine-layer challenge" />
+      <EditText android:id="@+id/layerInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Enter this layer's result" android:inputType="textVisiblePassword" />
+      <Button android:id="@+id/nextLayerButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Verify and continue" />
+      <Button android:id="@+id/backButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Back to user mode" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/ownerPanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Owner Mode — Prototype" android:textStyle="bold" android:textSize="22sp" />
+      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="All nine entries matched. This is a local interface demonstration only: it does NOT protect Rhino source code or grant real administrator permissions." />
+      <Button android:id="@+id/lockAgainButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Lock owner mode" />
+    </LinearLayout>
+  </LinearLayout>
 </ScrollView>
